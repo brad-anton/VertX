@@ -1,5 +1,6 @@
 /* HID ProxPoint Skimmer
 *  Brad Antoniewicz
+*  foundstone
 *
 * This is a prototype for a skimmer that sits between a
 * HID ProxPoint reader and a VertX Controller
