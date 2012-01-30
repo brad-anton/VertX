@@ -117,11 +117,12 @@ void loop() {
   int reader1Status = digitalRead(11);
   int reader2Status = digitalRead(12);
   if ( reader1Status == HIGH || reader2Status == HIGH ) {
-    digitalWrite(13, HIGH);
-    delay(1000);
+    Serial.println("---  D o o r  U n l o c k e d ---");
     digitalWrite(13, LOW);
+    delay(2000);
+    digitalWrite(13, HIGH);
    }else {
-    digitalWrite(13, LOW); 
+    digitalWrite(13, HIGH); 
    }
 
   // End Door Sensor Stuff

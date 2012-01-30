@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Peach xmlns="http://phed.org/2008/Peach" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://phed.org/2008/Peach /peach/peach.xsd">
+
+	<!-- Import defaults for Peach instance -->
+	<Include ns="default" src="file:defaults.xml"/>
+
+	<!-- TODO: Create data model -->
+	<DataModel name="DiscoveryString">
+	<!-- 	<String value="discover;013;" /> -->
+		<String name="cmdString" />
+		<String value=";" token="true" />
+		<Number size="16" signed="false" name="cmdCode" />
+		<String value=";" token="true" />
+	</DataModel>
+
+	<DataModel name="Discover" ref="DiscoveryString">
+		<String name="cmdString" value="discover" />
+		<Number name="cmdCode" value="013" />
+	</DataModel>
+	
+	<DataModel name="DiscoveryBlob">
+		<Blob valueType="hex" value="646973636f7665723b3031333b" />
+	</DataModel>
+       <DataModel name="cmdBlink_on-Blob">
+                <Blob valueType="hex" value="636f6d6d616e645f626c696e6b5f6f66663b3034323b30303a30363a38453a30303a30423a46343b313b" />
+        </DataModel>
+       <DataModel name="cmdBlink_off-Blob">
+                <Blob valueType="hex" value="636f6d6d616e645f626c696e6b5f6f6e3b3034323b30303a30363a38453a30303a30423a46343b33303b" />
+        </DataModel>
+
+
+        <DataModel name="cmdBlink_T">
+        <!--    <String value="command_blink_off;042;MAC_ADDR;1;" /> -->
+                <String name="cmdString" />
+                <String value=";" token="true" />
+                <Number size="16" signed="false" name="cmdCode" />
+                <String value=";" token="true" />
+               	<String name="macAddr" />
+                <String value=";" token="true" />
+               	<Number size="16" signed="false" name="field" />
+                <String value=";" token="true" />
+        </DataModel>
+
+        <DataModel name="cmdBlink" ref="cmdBlink_T">
+                <String name="cmdString" value="command_blink_off" />
+                <Number name="cmdCode" value="042" />
+		<String name="macAddr" value="FF:FF:FF:FF:FF:FF" />
+		<Number name="field" value="1" />
+        </DataModel>
+
+	<!-- TODO: Create state model -->
+	<StateModel name="State" initialState="Initial">
+
+		<State name="Initial">
+<!--
+			<Action type="output">
+				<DataModel ref="Discover"/>
+			</Action>
+			<Action type="output">
+				<DataModel ref="cmdBlink" />
+			</Action>
+-->
+			<Action type="output">
+				<DataModel ref="DiscoveryBlob" />
+			</Action>
+
+                        <Action type="output">
+                                <DataModel ref="cmdBlink_on-Blob" />
+                        </Action>
+                        <Action type="output">
+                                <DataModel ref="cmdBlink_off-Blob" />
+                        </Action>
+
+		</State>
+
+	</StateModel>
+
+	<!-- TODO: Configure Agent -->
+<!--	
+	<Agent name="TheAgent">
+
+	</Agent>
+-->
+	<Test name="DiscoveryFuzz">
+		<!-- TODO: Enable Agent -->
+		<!-- <Agent ref="TheAgent"/> -->
+		<StateModel ref="State"/>
+
+		<!-- TODO: Configure a publisher -->
+		<Publisher class="udp.Udp" >
+			<Param name="host" value="192.168.0.103" />
+			<Param name="port" value="4070" />
+		</Publisher>
+
+        
+        <!-- OPTIONAL: Configure a strategy -->
+        <!-- <Strategy class=""/> -->
+	</Test>
+
+	<!-- Configure a single run -->
+	<Run name="DefaultRun">
+
+		<!-- TODO: Change log path if needed -->
+		<Logger class="logger.Filesystem">
+			<Param name="path" value="logs"/>
+		</Logger>
+
+		<Test ref="DiscoveryFuzz"/>
+
+	</Run>
+
+</Peach>
+<!-- end -->

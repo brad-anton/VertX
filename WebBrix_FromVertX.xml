@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Peach xmlns="http://phed.org/2008/Peach" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://phed.org/2008/Peach /peach/peach.xsd">
+
+	<!-- Import defaults for Peach instance -->
+	<Include ns="default" src="file:defaults.xml"/>
+
+	<!-- TODO: Create data model -->
+
+<!---
+	Acknowledgement template, its just two fields 
+	
+-->
+
+        <DataModel name="WtoV_Ack_T">
+                <Number size="16" signed="true" name="field1" />
+                <String value=";" token="true"/>
+		<Number size="16" signed="true" name="field2" />
+                <String value=";" token="true"/>
+        </DataModel>
+
+<!--
+	WebBrix to VertX - Ack
+		Sent to ack anything recieved by the VertX
+-->
+
+	<DataModel name="WtoV_Ack" ref="WtoV_Ack_T">
+		<Number name="field1" value="0067" />
+		<Number name="field2" value="0010" />
+	</DataModel>
+
+<!--
+	VertX to WebBrix - Ack
+		Sent to ack anything recieved by WebBrix
+-->
+
+	<DataModel name="VtoW_Ack" ref="WtoV_Ack_T">
+		<Number name="field1" value="0080" />
+                <Number name="field2" value="0010" />
+        </DataModel>
+
+
+        <DataModel name="WtoV_D1Open_T">
+                <Number size="16" signed="true" name="field1" />
+                <String value=";" token="true"/>
+                <Number size="16" signed="true" name="field2" />
+                <String value=";" token="true"/>
+                <Number size="16" signed="true" name="field3" />
+                <String value=";" token="true"/>
+                <Number size="16" signed="true" name="field4" />
+                <String value=";" token="true"/>
+                <Number size="16" signed="true" name="field5" />
+                <String value=";" token="true"/>
+        </DataModel>
+
+        <DataModel name="WtoV_D1Open" ref="WtoV_D1Open_T">
+                <Number name="field1" value="0001" />
+                <Number name="field2" value="0015" />
+               	<Number name="field3" value="0" />
+               	<Number name="field4" value="7" />
+               	<Number name="field5" value="2" />
+        </DataModel>
+
+<!-- 
+	VertX to WebBrix - Card Read - Door 1 - Value 00263F96
+
+	Note: If you feed this into Peach as a single string, it'll eventually
+		crash DCS.exe  
+
+	<String value="1065;0118;1060;000212;2;20;1;22;245;11:48:59 IST 07/19/2011;00:06:8E:00:0B:F4;0;0;00263F96000000000000000000000000;" />
+
+-->
+
+
+
+	<!--
+		VertX to WebBrix - HeartBeat/Keepalive
+<String value="1080;0087;V2000;10.112.18.50;00:06:8E:00:0B:F4;VertXController;11:42:12 IST 07/19/2011;" />
+
+	-->
+	<DataModel name="VtoW_HB_S">
+		<String value="1080;0087;V2000;10.112.18.50;00:06:8E:00:0B:F4;VertXController;11:42:12 IST 07/19/2011;" />
+	</DataModel>
+	
+       <DataModel name="VtoW_HB_T">
+                <Number size="16" signed="true" name="field1" />
+                <String value=";" token="true"/>
+                <Number size="16" signed="true" name="field2" />
+                <String value=";" token="true"/>
+                <String name="field3" />
+                <String value=";" token="true"/>
+                <String name="field4" />
+                <String value=";" token="true"/>
+                <String name="field5" />
+                <String value=";" token="true"/>
+                <String name="field6" />
+                <String value=";" token="true"/>
+                <String name="field7" />
+                <String value=";" token="true"/>
+
+        </DataModel>
+
+        <DataModel name="VtoW_HB" ref="VtoW_HB_T">
+                <Number name="field1" value="1080" />
+                <Number name="field2" value="0087" />
+                <String name="field3" value="V2000" />
+                <String name="field4" value="10.112.18.50" />
+                <String name="field5" value="00:06:8E:00:0B:F4" />
+		<String name="field6" value="VertXController" />
+                <String name="field7" value="11:42:12 IST 07/19/2011" />
+        </DataModel>
+
+
+<!--
+	VertX to WebBrix - Successful Card Read
+
+1065;0084;1060;000213;1;20;2;20;245;11:51:49 IST 07/19/2011;00:06:8E:00:0B:F4;0;0;
+-->
+        <DataModel name="VtoW_CR_S">
+                <String value="1065;0084;1060;000213;1;20;2;20;245;11:51:49 IST 07/19/2011;00:06:8E:00:0B:F4;0;0;" />
+        </DataModel>
+
+       <DataModel name="VtoW_CR_T">
+                <Number size="16" signed="true" name="field1" />
+                <String value=";" token="true"/>
+                <Number size="16" signed="true" name="field2" />
+                <String value=";" token="true"/>
+                <Number size="16" signed="true" name="field3" />
+                <String value=";" token="true"/>
+                <Number size="24" signed="true" name="field4" />
+                <String value=";" token="true"/>
+                <Number size="8" signed="true" name="field5" />
+                <String value=";" token="true"/>
+                <Number size="16" signed="true" name="field6" />
+                <String value=";" token="true"/>
+                <Number size="8" signed="true" name="field7" />
+                <String value=";" token="true"/>
+                <Number size="16" signed="true" name="field8" />
+                <String value=";" token="true"/>
+                <Number size="16" signed="true" name="field9" />
+                <String value=";" token="true"/>
+                <String name="field10" />
+                <String value=";" token="true"/>
+                <String name="field11" />
+                <String value=";" token="true"/>
+                <Number size="8" signed="true" name="field12" />
+                <String value=";" token="true"/>
+                <Number size="8" signed="true" name="field13" />
+                <String value=";" token="true"/>
+
+
+        </DataModel>
+
+        <DataModel name="VtoW_CR" ref="VtoW_CR_T">
+                <Number name="field1" value="1065" />
+                <Number name="field2" value="0084" />
+                <Number name="field3" value="1060" />
+                <Number name="field4" value="000213" />
+                <Number name="field5" value="1" />
+                <Number name="field6" value="20" />
+                <Number name="field7" value="2" />
+                <Number name="field8" value="20" />
+                <Number name="field9" value="245" />
+                <String name="field10" value="11:51:49 IST 07/19/2011" />
+                <String name="field11" value="00:06:8E:00:0B:F4" />
+                <Number name="field12" value="0" />
+                <Number name="field13" value="0" />
+        </DataModel>
+
+	<!-- TODO: Create state model -->
+	<StateModel name="State" initialState="Initial">
+
+		<State name="Initial">
+			<Action type="output">
+				<DataModel ref="WtoV_Ack"/>
+			</Action>
+
+			<Action type="output">
+				<DataModel ref="WtoV_D1Open" />
+			</Action>
+
+                        <Action type="output">
+                                <DataModel ref="VtoW_Ack" />
+                        </Action>
+                        <Action type="output">
+                                <DataModel ref="VtoW_HB" />
+                        </Action>
+			 <Action type="output">
+                                <DataModel ref="VtoW_HB_S" />
+                        </Action>
+                        <Action type="output">
+                                <DataModel ref="VtoW_CR" />
+                        </Action>
+                        <Action type="output">
+                                <DataModel ref="VtoW_CR_S" />
+                        </Action>
+
+		</State>
+
+	</StateModel>
+
+	<!-- TODO: Configure Agent -->
+	<Agent name="TheAgent" location="http://127.0.0.1:9000">
+		<Monitor class="network.PortMonitor">
+			<Param name="hostname" value="10.112.18.19" />
+			<Param name="port" value="4070" />
+		</Monitor>
+	
+	</Agent>
+
+	<Test name="DiscoveryFuzz">
+		<!-- TODO: Enable Agent -->
+		<!-- <Agent ref="TheAgent"/> -->
+		<StateModel ref="State"/>
+
+		<!-- TODO: Configure a publisher -->
+		<Publisher class="tcp.Tcp" >
+			<Param name="host" value="10.112.18.19" />
+			<Param name="port" value="4070" />
+		</Publisher>
+
+        
+        <!-- OPTIONAL: Configure a strategy -->
+        <!-- <Strategy class=""/> -->
+	</Test>
+
+	<!-- Configure a single run -->
+	<Run name="DefaultRun">
+
+		<!-- TODO: Change log path if needed -->
+		<Logger class="logger.Filesystem">
+			<Param name="path" value="logs"/>
+		</Logger>
+
+		<Test ref="DiscoveryFuzz"/>
+
+	</Run>
+
+</Peach>
+<!-- end -->
