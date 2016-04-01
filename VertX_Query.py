@@ -85,7 +85,10 @@ def buildmsg(msg_type,verbose,host,port):
 def sendmsg(host,port,hex_msg,verbose,count,msg_type):
 
         udp=0
-
+        
+        #sss0bbb 2016-04-01 added to correct UnboundLocalError 
+        mac=0
+        
         if ((msg_type == "01") or (msg_type == "02") or (msg_type == "03")):
                 if verbose:
                         print '[Verbose] Message type indicates UDP'
