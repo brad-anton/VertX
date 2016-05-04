@@ -19,9 +19,10 @@ def usage():
         help += "\t-p <port>\t port (default 4070)\n"
         help += "\t-v \t\t verbose\n"
         help += "\t-m <code> \t Message Type code\n"
+        help += "\t-A <args> \t Arguments to append to message, if Message Type code supports it\n"
         help += "\nSupported Message Types:\n"
         help += "\t01 \t Discover\n"
-        help += "\t02 \t command_blink_on\n"
+        help += "\t02 \t command_blink_on \t args=time to blink\n"
         help += "\t03 \t command_blink_off\n"
         return help
 
@@ -38,22 +39,24 @@ def process_resp(recv_data,msg_type):
         return mac
 
 def get_mac(host,port):
-        msg_to_send = buildmsg("01",0,host,port)
+        msg_to_send = buildmsg("01",0,0,host,port)
         if msg_to_send:
                 mac = sendmsg(host,port,binascii.unhexlify(msg_to_send),0,0,"01")
         return mac
 
-def buildmsg(msg_type,verbose,host,port):
+def buildmsg(msg_type,args,verbose,host,port):
         # Basic Connect
         if msg_type == "01" :
                 # discover;013;
                 msg = "646973636f7665723b3031333b"
         elif msg_type == "02":
                 # command_blink_on;042;MAC_ADDR;30;
+                if args == 0:
+                    args = 30
                 print "[+] Querying Host first to pull MAC address"
                 msg = "command_blink_on;042;"
                 msg += get_mac(host,port)
-                msg += ";30;"
+                msg += ";%s;" % args
                 msg = binascii.hexlify(msg)
                 print "[+] Sending command_blink_on"
 
@@ -85,10 +88,10 @@ def buildmsg(msg_type,verbose,host,port):
 def sendmsg(host,port,hex_msg,verbose,count,msg_type):
 
         udp=0
-        
-        #sss0bbb 2016-04-01 added to correct UnboundLocalError 
+
+        #sss0bbb 2016-04-01 added to correct UnboundLocalError
         mac=0
-        
+
         if ((msg_type == "01") or (msg_type == "02") or (msg_type == "03")):
                 if verbose:
                         print '[Verbose] Message type indicates UDP'
@@ -163,13 +166,13 @@ def main():
         print "--------------------------------------\n"
 
         try:
-                opts, args = getopt.getopt(sys.argv[1:], "h:p:m:vfs:at:",[])
+                opts, args = getopt.getopt(sys.argv[1:], "h:p:m:vfs:atA:",[])
 
         except getopt.GetoptError:
                 print usage()
                 return
         port = 4070
-        host = cmdcode = verbose = fuzz = hex_str = dumbfuzz = ftype = vals = 0
+        host = cmdcode = verbose = fuzz = hex_str = dumbfuzz = ftype = vals = args = 0
 
         for o, a in opts:
                 if o == "-h":
@@ -188,6 +191,8 @@ def main():
                         vals = 1
                 if o == "-t":
                         ftype = a
+                if o == "-A":
+                        args = a
         if (host == 0) or (cmdcode == 0):
                 print usage()
                 return
@@ -200,7 +205,7 @@ def main():
         elif dumbfuzz:
                 dumbfuzzer(verbose)
         else:
-                msg_to_send = buildmsg(cmdcode,verbose,host,port)
+                msg_to_send = buildmsg(cmdcode,args,verbose,host,port)
                 if msg_to_send:
                         sendmsg(host,port,binascii.unhexlify(msg_to_send),verbose,0,cmdcode)
 main()
